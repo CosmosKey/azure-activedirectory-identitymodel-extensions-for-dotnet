@@ -50,8 +50,18 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation.Tests
             var context  = TestUtilities.WriteHeader($"{this}.ReadMetadata", theoryData);
             try
             {
-                var reader = XmlReader.Create(new StringReader(theoryData.Metadata));
-                var configuration = theoryData.Serializer.ReadMetadata(reader);
+                var configuration = new WsFederationConfiguration();
+
+                if (!string.IsNullOrEmpty(theoryData.Metadata))
+                {
+                    var reader = XmlReader.Create(new StringReader(theoryData.Metadata));
+                    configuration = theoryData.Serializer.ReadMetadata(reader);
+                }
+                else
+                {
+                    var reader = XmlReader.Create(theoryData.MetadataPath);
+                    configuration = theoryData.Serializer.ReadMetadata(reader);
+                }
 
                 if (theoryData.SigingKey != null)
                     configuration.Signature.Verify(theoryData.SigingKey);
@@ -198,6 +208,24 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation.Tests
                     new WsFederationMetadataTheoryData
                     {
                         Metadata = ReferenceMetadata.AdfsV4Metadata,
+                        SigingKey = ReferenceMetadata.AdfsV4MetadataSigningKey,
+                        Configuration = ReferenceMetadata.AdfsV4Endpoint
+                    },
+                    new WsFederationMetadataTheoryData
+                    {
+                        MetadataPath = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\adfs-v2-metadata.xml"),
+                        SigingKey = ReferenceMetadata.AdfsV2MetadataSigningKey,
+                        Configuration = ReferenceMetadata.AdfsV2Endpoint
+                    },
+                    new WsFederationMetadataTheoryData
+                    {
+                        MetadataPath = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\adfs-v3-metadata.xml"),
+                        SigingKey = ReferenceMetadata.AdfsV3MetadataSigningKey,
+                        Configuration = ReferenceMetadata.AdfsV3Endpoint
+                    },
+                    new WsFederationMetadataTheoryData
+                    {
+                        MetadataPath = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\adfs-v4-metadata.xml"),
                         SigingKey = ReferenceMetadata.AdfsV4MetadataSigningKey,
                         Configuration = ReferenceMetadata.AdfsV4Endpoint
                     }
@@ -482,6 +510,8 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation.Tests
             public WsFederationConfiguration Configuration { get; set; }
 
             public string Metadata { get; set; }
+
+            public string MetadataPath { get; set; }
 
             public WsFederationMetadataSerializer Serializer { get; set; } = new WsFederationMetadataSerializer();
 
